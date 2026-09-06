@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the associated manuscript."
+title: "STG-MT: Edge-Bottom Water Gas Reservoir Forecasting"
+version: 1.0.0
+type: software
+authors:
+  - family-names: Qi
+    given-names: Zhongli
+  - family-names: Zhou
+    given-names: Hong
+  - family-names: Ma
+    given-names: Xiaowei
+  - family-names: Li
+    given-names: Jiaguang
+  - family-names: Wang
+    given-names: Lei
+repository-code: "https://github.com/Confucious777/stg-mt-edge-bottom-water-gas-reservoir-forecasting"
