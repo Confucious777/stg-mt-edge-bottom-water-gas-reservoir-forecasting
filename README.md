@@ -56,4 +56,4 @@ If you use this code, cite the associated manuscript. Machine-readable metadata 
 
 ## License
 
-No license has been selected for this release yet. Until a license is added, the code remains subject to the repository owner's copyright.
+This project is released under the [MIT License](LICENSE).
