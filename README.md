@@ -50,6 +50,10 @@ The training scripts expose the data paths and model settings used by the implem
 
 See [docs/data_schema.md](docs/data_schema.md) for the required file interface and [docs/reproduction.md](docs/reproduction.md) for the recommended private-data workflow. The implementation uses chronological data handling and computes normalization statistics from the training portion.
 
+### Manuscript experiment defaults
+
+The defaults exposed by the main spatiotemporal training entry point correspond to the manuscript experiment: a chronological 60%/20%/20% train/validation/test split, a short-term input length of 5 time steps, a 1-step forecast horizon, batch size 16, 8 graph neighbors per node, a 120-day long-term aggregation scale, and an influx-loss weight of 0.05. The default run does not enable held-out-well masking; use `--holdout_well` explicitly for a separate held-out-well experiment.
+
 ## Citation
 
 If you use this code, cite the associated manuscript. Machine-readable metadata are provided in [CITATION.cff](CITATION.cff).
