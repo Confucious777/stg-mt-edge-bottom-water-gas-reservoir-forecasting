@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -730,17 +730,17 @@ def prepare_tkg_dataloaders(
     date_col: str = DATE_COL,
     well_col: str = WELL_COL,
     dynamic_feature_cols: List[str] | None = None,
-    seq_len: int = 30,
+    seq_len: int = 5,
     horizon: int = 1,
-    train_ratio: float = 0.7,
-    val_ratio: float = 0.15,
-    batch_size: int = 4,
+    train_ratio: float = 0.6,
+    val_ratio: float = 0.2,
+    batch_size: int = 16,
     num_workers: int = 0,
     max_train_windows: int | None = None,
     max_val_windows: int | None = None,
     max_test_windows: int | None = None,
     padding_value: float = -999.0,
-    neighbor_k: int = 10,
+    neighbor_k: int = 8,
     alpha_dist: float = 0.5,
     alpha_prop: float = 0.4,
     alpha_layer: float = 0.1,
