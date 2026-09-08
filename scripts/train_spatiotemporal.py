@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import math
@@ -51,11 +51,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--date_col", type=str, default=DATE_COL, help="动态 CSV 日期列名")
     parser.add_argument("--well_col", type=str, default=WELL_COL, help="动态 CSV 井号列名")
 
-    parser.add_argument("--seq_len", type=int, default=90, help="输入历史窗口长度")
+    parser.add_argument("--seq_len", type=int, default=5, help="输入历史窗口长度")
     parser.add_argument("--horizon", type=int, default=1, help="预测提前期")
-    parser.add_argument("--train_ratio", type=float, default=0.7, help="训练集时间占比")
-    parser.add_argument("--val_ratio", type=float, default=0.15, help="验证集时间占比")
-    parser.add_argument("--batch_size", type=int, default=3, help="批大小")
+    parser.add_argument("--train_ratio", type=float, default=0.6, help="训练集时间占比")
+    parser.add_argument("--val_ratio", type=float, default=0.2, help="验证集时间占比")
+    parser.add_argument("--batch_size", type=int, default=16, help="批大小")
     parser.add_argument("--num_workers", type=int, default=0, help="DataLoader 进程数")
     parser.add_argument("--padding_value", type=float, default=-999.0, help="无效时间步填充值")
     parser.add_argument(
@@ -74,13 +74,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--split_mode",
         type=str,
-        default="stratified_random",
+        default="time",
         choices=["time", "stratified_random"],
         help="窗口切分模式 time为时间顺序 stratified_random为按水侵标签分层随机",
     )
-    parser.add_argument("--holdout_well", type=str, default="涩3-41", help="训练验证屏蔽的井号 在测试集提取预测 例如 涩3-41")
+    parser.add_argument("--holdout_well", type=str, default="", help="训练验证屏蔽的井号；留空表示主实验不设置留井")
 
-    parser.add_argument("--neighbor_k", type=int, default=6, help="每个节点保留的邻居数量 K")
+    parser.add_argument("--neighbor_k", type=int, default=8, help="每个节点保留的邻居数量 K")
     parser.add_argument("--alpha_dist", type=float, default=0.5, help="静态邻接距离项权重")
     parser.add_argument("--alpha_prop", type=float, default=0.4, help="静态邻接物性相似项权重")
     parser.add_argument("--alpha_layer", type=float, default=0.1, help="静态邻接层组一致项权重")
@@ -93,7 +93,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--time_hidden_dim", type=int, default=64, help="时间模块隐层维度")
     parser.add_argument("--temporal_nhead", type=int, default=4, help="时间 Transformer 注意力头数")
     parser.add_argument("--temporal_layers", type=int, default=2, help="时间 Transformer 层数")
-    parser.add_argument("--long_term_scale_days", type=int, default=10, help="长期分支时间聚合天数")
+    parser.add_argument("--long_term_scale_days", type=int, default=120, help="长期分支时间聚合天数")
     parser.add_argument("--global_nhead", type=int, default=8, help="全局空间 Transformer 注意力头数")
     parser.add_argument("--global_layers", type=int, default=2, help="全局空间 Transformer 层数")
     parser.add_argument("--dim_feedforward", type=int, default=128, help="Transformer 前馈层维度")
@@ -153,7 +153,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--device", type=str, default="cuda", choices=["auto", "cpu", "cuda"], help="训练设备")
     parser.add_argument("--amp", type=int, default=1, choices=[0, 1], help="是否开启 CUDA 混合精度 1开启 0关闭")
 
-    parser.add_argument("--influx_loss_weight", type=float, default=0.01, help="主损失中水侵预测损失权重")
+    parser.add_argument("--influx_loss_weight", type=float, default=0.05, help="主损失中水侵预测损失权重")
     parser.add_argument("--influx_loss_high_alpha", type=float, default=1, help="水侵主损失高值加权系数")
     parser.add_argument("--gas_low_weight_alpha", type=float, default=0, help="产气低值样本加权系数 自动按产气由小到大递减权重 0表示关闭")
     parser.add_argument("--max_train_windows", type=int, default=1024, help="训练集最多采样窗口数 <=0 表示不限制")
