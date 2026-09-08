@@ -86,7 +86,7 @@ def build_model(
             use_multiscale_temporal=bool(int(_arg(args, "use_multiscale_temporal", 1))),
             use_physics_guidance=bool(int(_arg(args, "use_physics_guidance", 1))),
             use_residual_decomposition=bool(int(_arg(args, "use_residual_decomposition", 1))),
-            long_term_scale_days=int(_arg(args, "long_term_scale_days", 30)),
+            long_term_scale_days=int(_arg(args, "long_term_scale_days", 120)),
         )
 
     if name == "cnn_bilstm":
