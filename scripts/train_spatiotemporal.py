@@ -33,15 +33,15 @@ def build_arg_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("--dynamic_path", type=str, default="processed/production_dynamic.csv", help="动态生产 CSV 路径")
-    parser.add_argument("--static_path", type=str, default="processed/build_TKG_data.csv", help="静态井属性 CSV 路径")
+    parser.add_argument("--dynamic_path", type=str, default="data/public/processed/production_dynamic.csv.gz", help="动态生产 CSV 路径")
+    parser.add_argument("--static_path", type=str, default="data/public/processed/build_TKG_data.csv", help="静态井属性 CSV 路径")
     parser.add_argument(
         "--fallback_static_path",
         type=str,
-        default="processed/single_well_info_with_coordinates.csv",
+        default="data/public/processed/single_well_info_with_coordinates.csv",
         help="静态字段缺失时的兜底 CSV 路径",
     )
-    parser.add_argument("--influx_csv_path", type=str, default="processed/水侵量计算结果.csv", help="水侵速度 CSV 路径")
+    parser.add_argument("--influx_csv_path", type=str, default="data/public/processed/水侵量计算结果.csv", help="水侵速度 CSV 路径")
     parser.add_argument("--influx_col", type=str, default=INFLUX_COL, help="水侵速度列名")
     parser.add_argument("--influx_date_col", type=str, default=DATE_COL, help="水侵文件日期列名")
 

@@ -4,6 +4,9 @@ The public repository does not contain field records or derived labels. The foll
 
 ## Dynamic production table
 
+The release file is `data/public/processed/production_dynamic.csv.gz`; the
+loader reads it directly as a gzip-compressed CSV.
+
 The dynamic CSV must contain at least these columns:
 
 | Column | Meaning |
@@ -38,4 +41,8 @@ The loaders coerce numeric fields, fill feature gaps using forward/backward valu
 
 ## Privacy
 
-Do not place raw field data, well names that identify an operator's asset, private coordinates, production histories, labels, model checkpoints, or generated experiment files in this repository.
+The repository dataset is a relationship-preserving anonymized release. Well
+identifiers, dates, coordinates, layer labels, measure labels, and static
+non-target attributes are transformed before publication. Raw field data,
+operator-identifying well names, source coordinates, checkpoints, and
+generated experiment files must not be added to the repository.

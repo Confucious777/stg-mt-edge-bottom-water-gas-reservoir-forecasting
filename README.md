@@ -4,9 +4,9 @@ This repository contains the core PyTorch implementation of the STG-MT spatiotem
 
 ## Scope
 
-The release contains the STG-MT model definition, data-loader interfaces, training entry points, metrics, and a small unit-test suite. Baseline model implementations and benchmark result artifacts are not included in this public release. Field production records, well coordinates, reservoir properties, derived water-invasion labels, trained checkpoints, and experiment outputs are not included because they are project-specific and may be proprietary. No synthetic-data generator or synthetic dataset is included.
+The release contains the STG-MT model definition, a relationship-preserving anonymized dataset, data-loader interfaces, training entry points, metrics, and a small unit-test suite. Baseline model implementations and benchmark result artifacts are not included in this public release.
 
-The public code is therefore an implementation release rather than a ready-to-run copy of the field experiment. Reproduction requires authorized access to the data files described in [docs/data_schema.md](docs/data_schema.md).
+The public dataset anonymizes well identifiers, dates, coordinates, layer labels, measure labels, and static non-target attributes. Gas-production and water-invasion target values are retained to support comparison with the manuscript metrics. The release dataset is not an operator-identifiable copy of the source files.
 
 ## Repository layout
 
@@ -18,6 +18,7 @@ scripts/      training entry points
 utils/        I/O, metrics, and random-seed helpers
 tests/        lightweight unit tests
 docs/         data interface and reproduction notes
+data/public/  anonymized release dataset (dynamic production is gzip-compressed)
 ```
 
 ## Environment
@@ -44,7 +45,13 @@ The default entry point is:
 python main.py
 ```
 
-The training scripts expose the data paths and STG-MT model settings used by the implementation. Before training, inspect the argument defaults and provide paths to local authorized data. Do not commit raw data, processed field data, checkpoints, or experiment outputs.
+The training scripts default to the anonymized release dataset under `data/public/processed/`. Run the STG-MT training entry point with:
+
+```bash
+python main.py
+```
+
+Do not commit raw source data, checkpoints, or experiment outputs.
 
 ## Data and reproducibility
 
@@ -52,7 +59,7 @@ See [docs/data_schema.md](docs/data_schema.md) for the required file interface a
 
 ### Manuscript experiment defaults
 
-The defaults exposed by the main spatiotemporal training entry point correspond to the fixed manuscript settings: a chronological 60%/20%/20% train/validation/test split, a 1-step forecast horizon, batch size 16, 8 graph neighbors per node, static graph weights $(\alpha_d,\alpha_p,\alpha_l)=(0.5,0.4,0.1)$, dynamic edge coefficients $(\beta_L,\beta_D)=(0.4,0.4)$, and an influx-loss weight of 0.05. The short-term and long-term temporal ranges remain configurable and should be set to the values selected on the validation set for a specific experiment. The default run does not enable held-out-well masking; use `--holdout_well` explicitly for a separate held-out-well experiment.
+The defaults exposed by the main spatiotemporal training entry point use a chronological 60%/20%/20% train/validation/test split, a 1-step forecast horizon, batch size 16, 8 graph neighbors per node, static graph weights $(\alpha_d,\alpha_p,\alpha_l)=(0.5,0.4,0.1)$, dynamic edge coefficients $(\beta_L,\beta_D)=(0.4,0.4)$, and an influx-loss weight of 0.05. The short-term and long-term temporal ranges remain configurable. The default run does not enable held-out-well masking; use `--holdout_well` explicitly for a separate held-out-well experiment.
 
 ## Citation
 

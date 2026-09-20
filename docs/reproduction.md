@@ -1,11 +1,11 @@
 # Reproduction notes
 
-The field experiments require authorized access to the project data and the same preprocessing configuration used to derive the manuscript results. This repository intentionally contains no field data and no synthetic replacement data.
+The repository includes a relationship-preserving anonymized release dataset under `data/public/processed/`. The source operator data remain private and are not included. The release copy preserves the row-level temporal and inter-well structure; target values are retained to make the published benchmark comparable.
 
 ## Recommended workflow
 
 1. Create a local Python environment and install `requirements.txt`.
-2. Place authorized dynamic and static CSV files outside the repository, or under paths ignored by `.gitignore`.
+2. The default command uses the included anonymized dynamic, static, and water-invasion CSV files. Authorized source data can be supplied with the corresponding path arguments if needed.
 3. Confirm that dates are parsed as daily observations and that the well identifier is consistent across dynamic and static tables.
 4. Convert sentinel values such as `-999` to missing values before feature normalization. Preserve validity masks for targets.
 5. Run the appropriate script in `scripts/` after checking its path and hyperparameter arguments.

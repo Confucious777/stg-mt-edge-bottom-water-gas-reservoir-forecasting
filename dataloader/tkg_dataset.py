@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import gzip
 from pathlib import Path
 import re
 from typing import Dict, List, Sequence, Tuple
@@ -31,12 +32,15 @@ STATIC_ZERO_AS_MISSING_COLS = frozenset({PORO_COL, PERM_COL})
 
 
 def _read_csv_with_fallback(path: Path) -> pd.DataFrame:
+    opener = gzip.open if path.suffix.lower() == ".gz" else open
     for enc in ("utf-8-sig", "utf-8", "gb18030", "gbk"):
         try:
-            return pd.read_csv(path, encoding=enc)
+            with opener(path, "rt", encoding=enc, newline="") as handle:
+                return pd.read_csv(handle)
         except UnicodeDecodeError:
             continue
-    return pd.read_csv(path)
+    with opener(path, "rt", encoding="utf-8", newline="") as handle:
+        return pd.read_csv(handle)
 
 
 def _fit_minmax(values: np.ndarray) -> Tuple[float, float]:
