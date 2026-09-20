@@ -119,9 +119,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
         type=str,
         default="ours",
         choices=available_model_names(),
-        help="模型名称 供基线对比实验选择",
+        help="公开模型入口；本仓库仅发布 STG-MT",
     )
-    parser.add_argument("--benchmark_hidden_dim", type=int, default=128, help="基线模型统一隐层维度")
     parser.add_argument("--lstnet_conv_kernel", type=int, default=5, help="LSTNet 时间卷积核大小")
     parser.add_argument("--lstnet_skip_window", type=int, default=6, help="LSTNet 跳连窗口长度")
     parser.add_argument("--timesnet_blocks", type=int, default=3, help="TimesNet 块数")
