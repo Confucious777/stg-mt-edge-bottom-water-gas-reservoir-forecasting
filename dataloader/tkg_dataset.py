@@ -744,7 +744,7 @@ def prepare_tkg_dataloaders(
     alpha_dist: float = 0.5,
     alpha_prop: float = 0.4,
     alpha_layer: float = 0.1,
-    dynamic_beta_level: float = 0.6,
+    dynamic_beta_level: float = 0.4,
     dynamic_beta_diff: float = 0.4,
     dynamic_mean_override: np.ndarray | Sequence[float] | None = None,
     dynamic_std_override: np.ndarray | Sequence[float] | None = None,

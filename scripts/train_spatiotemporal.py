@@ -84,7 +84,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--alpha_dist", type=float, default=0.5, help="静态邻接距离项权重")
     parser.add_argument("--alpha_prop", type=float, default=0.4, help="静态邻接物性相似项权重")
     parser.add_argument("--alpha_layer", type=float, default=0.1, help="静态邻接层组一致项权重")
-    parser.add_argument("--dynamic_beta_level", type=float, default=0.6, help="动态边权水量水平门控系数")
+    parser.add_argument("--dynamic_beta_level", type=float, default=0.4, help="动态边权水量水平门控系数")
     parser.add_argument("--dynamic_beta_diff", type=float, default=0.4, help="动态边权水量差异门控系数")
 
     parser.add_argument("--static_embed_dim", type=int, default=32, help="静态特征嵌入维度")
