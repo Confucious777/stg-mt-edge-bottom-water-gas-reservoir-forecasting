@@ -4,7 +4,7 @@ This repository contains the core PyTorch implementation of the STG-MT spatiotem
 
 ## Scope
 
-The release contains model definitions, data-loader interfaces, training entry points, metrics, and a small unit-test suite. Field production records, well coordinates, reservoir properties, derived water-invasion labels, trained checkpoints, and experiment outputs are not included because they are project-specific and may be proprietary. No synthetic-data generator or synthetic dataset is included.
+The release contains the STG-MT model definition, data-loader interfaces, training entry points, metrics, and a small unit-test suite. Baseline model implementations and benchmark result artifacts are not included in this public release. Field production records, well coordinates, reservoir properties, derived water-invasion labels, trained checkpoints, and experiment outputs are not included because they are project-specific and may be proprietary. No synthetic-data generator or synthetic dataset is included.
 
 The public code is therefore an implementation release rather than a ready-to-run copy of the field experiment. Reproduction requires authorized access to the data files described in [docs/data_schema.md](docs/data_schema.md).
 
@@ -12,7 +12,7 @@ The public code is therefore an implementation release rather than a ready-to-ru
 
 ```text
 dataloader/   CSV readers and sequence-window construction
-models/       temporal, spatial, benchmark, and regression models
+models/       STG-MT temporal, spatial, and regression modules
 pygcn/        graph-neural-network components
 scripts/      training entry points
 utils/        I/O, metrics, and random-seed helpers
@@ -44,7 +44,7 @@ The default entry point is:
 python main.py
 ```
 
-The training scripts expose the data paths and model settings used by the implementation. Before training, inspect the argument defaults and provide paths to local authorized data. Do not commit raw data, processed field data, checkpoints, or experiment outputs.
+The training scripts expose the data paths and STG-MT model settings used by the implementation. Before training, inspect the argument defaults and provide paths to local authorized data. Do not commit raw data, processed field data, checkpoints, or experiment outputs.
 
 ## Data and reproducibility
 

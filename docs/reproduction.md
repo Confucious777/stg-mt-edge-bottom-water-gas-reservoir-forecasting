@@ -21,4 +21,4 @@ Normalization statistics are fitted from the training portion in the loaders. Se
 - Record the random seed and the exact command line.
 - Record the data snapshot, preprocessing version, and column mapping.
 - Record sequence length, forecast horizon, batch size, graph-neighbor setting, and optimization settings.
-- Report the same test samples and evaluation metrics for every baseline.
+- Report the test samples and evaluation metrics for the STG-MT release. Comparative baseline implementations and benchmark outputs are maintained outside this public code-only release.
