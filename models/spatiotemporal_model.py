@@ -130,7 +130,7 @@ class SpatioTemporalForecastModel(nn.Module):
         return_debug: bool = False,
         return_attention: bool = False,
     ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
-        # 关键节点 静态特征广播到时间维
+        #
         batch_size, seq_len, _, _ = dynamic_x.shape
         spatial_extra: Dict[str, torch.Tensor] = {}
         if self.use_spatial_module and self.local_encoder is not None and self.local_to_global is not None:
@@ -163,7 +163,7 @@ class SpatioTemporalForecastModel(nn.Module):
             h_local = dynamic_x.new_zeros((batch_size, seq_len, dynamic_x.shape[2], self.gru_hidden_dim))
             h_global = h_local
 
-        # 关键节点 时间模块内部支持多尺度和物理引导消融
+        #
         temporal_out = self.temporal_module(
             production_x=dynamic_x,
             node_mask=node_mask,

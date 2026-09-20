@@ -1,6 +1,6 @@
 # Reproduction notes
 
-The repository includes a relationship-preserving anonymized release dataset under `data/public/processed/`. The source operator data remain private and are not included. The release copy preserves the row-level temporal and inter-well structure; target values are retained to make the published benchmark comparable.
+The repository includes a relationship-preserving anonymized release dataset under `data/public/processed_en/`. The source operator data remain private and are not included. The release copy preserves the row-level temporal and inter-well structure; target values are retained to make the published benchmark comparable.
 
 ## Recommended workflow
 

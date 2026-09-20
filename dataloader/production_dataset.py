@@ -7,9 +7,9 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-DEFAULT_TARGET_COL = "日产气量"
-DEFAULT_DATE_COL = "日期"
-DEFAULT_WELL_COL = "井号"
+DEFAULT_TARGET_COL = "gas_production"
+DEFAULT_DATE_COL = "date"
+DEFAULT_WELL_COL = "well_id"
 
 
 class SequenceDataset(Dataset):

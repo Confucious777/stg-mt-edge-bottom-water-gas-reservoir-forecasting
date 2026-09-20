@@ -29,138 +29,138 @@ from utils import ensure_dir, format_metrics, regression_metrics, save_json, set
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="训练时空模型 双目标为日产气量和水侵速度",
+        description=" ",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("--dynamic_path", type=str, default="data/public/processed/production_dynamic.csv.gz", help="动态生产 CSV 路径")
-    parser.add_argument("--static_path", type=str, default="data/public/processed/build_TKG_data.csv", help="静态井属性 CSV 路径")
+    parser.add_argument("--dynamic_path", type=str, default="data/public/processed_en/production_dynamic.csv.gz", help="Dynamic production CSV path")
+    parser.add_argument("--static_path", type=str, default="data/public/processed_en/build_TKG_data.csv", help="Static well CSV path")
     parser.add_argument(
         "--fallback_static_path",
         type=str,
-        default="data/public/processed/single_well_info_with_coordinates.csv",
-        help="静态字段缺失时的兜底 CSV 路径",
+        default="data/public/processed_en/single_well_info_with_coordinates.csv",
+        help=" CSV ",
     )
-    parser.add_argument("--influx_csv_path", type=str, default="data/public/processed/水侵量计算结果.csv", help="水侵速度 CSV 路径")
-    parser.add_argument("--influx_col", type=str, default=INFLUX_COL, help="水侵速度列名")
-    parser.add_argument("--influx_date_col", type=str, default=DATE_COL, help="水侵文件日期列名")
+    parser.add_argument("--influx_csv_path", type=str, default="data/public/processed_en/water_invasion_result.csv", help="Water-invasion CSV path")
+    parser.add_argument("--influx_col", type=str, default=INFLUX_COL, help="")
+    parser.add_argument("--influx_date_col", type=str, default=DATE_COL, help="")
 
-    parser.add_argument("--target_col", type=str, default=TARGET_COL, help="主目标列名 日产气量")
-    parser.add_argument("--water_col", type=str, default=WATER_COL, help="用于动态边权更新的日产水量列名")
-    parser.add_argument("--measure_type_col", type=str, default=MEASURE_TYPE_COL, help="措施类型列名 用于独热编码")
-    parser.add_argument("--date_col", type=str, default=DATE_COL, help="动态 CSV 日期列名")
-    parser.add_argument("--well_col", type=str, default=WELL_COL, help="动态 CSV 井号列名")
+    parser.add_argument("--target_col", type=str, default=TARGET_COL, help=" ")
+    parser.add_argument("--water_col", type=str, default=WATER_COL, help="")
+    parser.add_argument("--measure_type_col", type=str, default=MEASURE_TYPE_COL, help=" ")
+    parser.add_argument("--date_col", type=str, default=DATE_COL, help=" CSV ")
+    parser.add_argument("--well_col", type=str, default=WELL_COL, help=" CSV ")
 
-    parser.add_argument("--seq_len", type=int, default=5, help="输入历史窗口长度")
-    parser.add_argument("--horizon", type=int, default=1, help="预测提前期")
-    parser.add_argument("--train_ratio", type=float, default=0.6, help="训练集时间占比")
-    parser.add_argument("--val_ratio", type=float, default=0.2, help="验证集时间占比")
-    parser.add_argument("--batch_size", type=int, default=16, help="批大小")
-    parser.add_argument("--num_workers", type=int, default=0, help="DataLoader 进程数")
-    parser.add_argument("--padding_value", type=float, default=-999.0, help="无效时间步填充值")
+    parser.add_argument("--seq_len", type=int, default=5, help="")
+    parser.add_argument("--horizon", type=int, default=1, help="")
+    parser.add_argument("--train_ratio", type=float, default=0.6, help="")
+    parser.add_argument("--val_ratio", type=float, default=0.2, help="")
+    parser.add_argument("--batch_size", type=int, default=16, help="")
+    parser.add_argument("--num_workers", type=int, default=0, help="DataLoader ")
+    parser.add_argument("--padding_value", type=float, default=-999.0, help="")
     parser.add_argument(
         "--align_well_sets",
         type=int,
         default=1,
         choices=[0, 1],
-        help="是否按动态井号与静态井号交集对齐 1是 0否",
+        help=" 1 0",
     )
     parser.add_argument(
         "--min_valid_days",
         type=int,
         default=180,
-        help="每口井最少有效日产气量天数 小于阈值会被过滤 <=0 表示不过滤",
+        help="  <=0 ",
     )
     parser.add_argument(
         "--split_mode",
         type=str,
         default="time",
         choices=["time", "stratified_random"],
-        help="窗口切分模式 time为时间顺序 stratified_random为按水侵标签分层随机",
+        help=" time stratified_random",
     )
-    parser.add_argument("--holdout_well", type=str, default="", help="训练验证屏蔽的井号；留空表示主实验不设置留井")
+    parser.add_argument("--holdout_well", type=str, default="", help="；")
 
-    parser.add_argument("--neighbor_k", type=int, default=8, help="每个节点保留的邻居数量 K")
-    parser.add_argument("--alpha_dist", type=float, default=0.5, help="静态邻接距离项权重")
-    parser.add_argument("--alpha_prop", type=float, default=0.4, help="静态邻接物性相似项权重")
-    parser.add_argument("--alpha_layer", type=float, default=0.1, help="静态邻接层组一致项权重")
-    parser.add_argument("--dynamic_beta_level", type=float, default=0.4, help="动态边权水量水平门控系数")
-    parser.add_argument("--dynamic_beta_diff", type=float, default=0.4, help="动态边权水量差异门控系数")
+    parser.add_argument("--neighbor_k", type=int, default=8, help=" K")
+    parser.add_argument("--alpha_dist", type=float, default=0.5, help="")
+    parser.add_argument("--alpha_prop", type=float, default=0.4, help="")
+    parser.add_argument("--alpha_layer", type=float, default=0.1, help="")
+    parser.add_argument("--dynamic_beta_level", type=float, default=0.4, help="")
+    parser.add_argument("--dynamic_beta_diff", type=float, default=0.4, help="")
 
-    parser.add_argument("--static_embed_dim", type=int, default=32, help="静态特征嵌入维度")
-    parser.add_argument("--local_hidden_dim", type=int, default=64, help="GraphSAGE 隐层维度")
-    parser.add_argument("--gru_hidden_dim", type=int, default=64, help="GRU 隐层维度")
-    parser.add_argument("--time_hidden_dim", type=int, default=64, help="时间模块隐层维度")
-    parser.add_argument("--temporal_nhead", type=int, default=4, help="时间 Transformer 注意力头数")
-    parser.add_argument("--temporal_layers", type=int, default=2, help="时间 Transformer 层数")
-    parser.add_argument("--long_term_scale_days", type=int, default=120, help="长期分支时间聚合天数")
-    parser.add_argument("--global_nhead", type=int, default=8, help="全局空间 Transformer 注意力头数")
-    parser.add_argument("--global_layers", type=int, default=2, help="全局空间 Transformer 层数")
-    parser.add_argument("--dim_feedforward", type=int, default=128, help="Transformer 前馈层维度")
-    parser.add_argument("--dropout", type=float, default=0.1, help="Dropout 比例")
+    parser.add_argument("--static_embed_dim", type=int, default=32, help="")
+    parser.add_argument("--local_hidden_dim", type=int, default=64, help="GraphSAGE ")
+    parser.add_argument("--gru_hidden_dim", type=int, default=64, help="GRU ")
+    parser.add_argument("--time_hidden_dim", type=int, default=64, help="")
+    parser.add_argument("--temporal_nhead", type=int, default=4, help=" Transformer ")
+    parser.add_argument("--temporal_layers", type=int, default=2, help=" Transformer ")
+    parser.add_argument("--long_term_scale_days", type=int, default=120, help="")
+    parser.add_argument("--global_nhead", type=int, default=8, help=" Transformer ")
+    parser.add_argument("--global_layers", type=int, default=2, help=" Transformer ")
+    parser.add_argument("--dim_feedforward", type=int, default=128, help="Transformer ")
+    parser.add_argument("--dropout", type=float, default=0.1, help="Dropout ")
     parser.add_argument(
         "--temporal_fuse_mode",
         type=str,
         default="concat",
         choices=["add", "concat"],
-        help="短期与长期时间特征融合方式",
+        help="",
     )
-    parser.add_argument("--residual_blocks", type=int, default=3, help="残差分解块数量")
-    parser.add_argument("--residual_hidden_dim", type=int, default=256, help="残差分解块隐层维度")
-    parser.add_argument("--pred_dim", type=int, default=2, help="预测维度 2表示产气和水侵双目标")
-    parser.add_argument("--use_spatial_module", type=int, default=1, choices=[0, 1], help="是否启用空间依赖建模模块")
-    parser.add_argument("--use_multiscale_temporal", type=int, default=1, choices=[0, 1], help="是否启用多尺度时间建模模块")
-    parser.add_argument("--use_physics_guidance", type=int, default=1, choices=[0, 1], help="是否启用物理引导辅助输入")
-    parser.add_argument("--use_residual_decomposition", type=int, default=1, choices=[0, 1], help="是否启用残差分解预测头")
-    parser.add_argument("--disable_influx_supervision", type=int, default=0, choices=[0, 1], help="是否关闭水侵预测监督 1表示训练时仅优化产气损失")
+    parser.add_argument("--residual_blocks", type=int, default=3, help="")
+    parser.add_argument("--residual_hidden_dim", type=int, default=256, help="")
+    parser.add_argument("--pred_dim", type=int, default=2, help=" 2")
+    parser.add_argument("--use_spatial_module", type=int, default=1, choices=[0, 1], help="")
+    parser.add_argument("--use_multiscale_temporal", type=int, default=1, choices=[0, 1], help="")
+    parser.add_argument("--use_physics_guidance", type=int, default=1, choices=[0, 1], help="")
+    parser.add_argument("--use_residual_decomposition", type=int, default=1, choices=[0, 1], help="")
+    parser.add_argument("--disable_influx_supervision", type=int, default=0, choices=[0, 1], help=" 1")
 
     parser.add_argument(
         "--model_name",
         type=str,
         default="ours",
         choices=available_model_names(),
-        help="公开模型入口；本仓库仅发布 STG-MT",
+        help="； STG-MT",
     )
-    parser.add_argument("--lstnet_conv_kernel", type=int, default=5, help="LSTNet 时间卷积核大小")
-    parser.add_argument("--lstnet_skip_window", type=int, default=6, help="LSTNet 跳连窗口长度")
-    parser.add_argument("--timesnet_blocks", type=int, default=3, help="TimesNet 块数")
-    parser.add_argument("--asthgcn_hyperedges", type=int, default=16, help="ASTHGCN 超边数量")
-    parser.add_argument("--st_transformer_layers", type=int, default=2, help="ST-Transformer 层数")
-    parser.add_argument("--st_transformer_nhead", type=int, default=4, help="ST-Transformer 注意力头数")
-    parser.add_argument("--patch_len", type=int, default=6, help="PatchTST patch 长度")
-    parser.add_argument("--patch_stride", type=int, default=3, help="PatchTST patch 步长")
-    parser.add_argument("--patchtst_layers", type=int, default=2, help="PatchTST 编码器层数")
-    parser.add_argument("--patchtst_nhead", type=int, default=4, help="PatchTST 注意力头数")
-    parser.add_argument("--fedformer_top_k_freq", type=int, default=16, help="FEDformer 保留频率数量")
-    parser.add_argument("--fedformer_moving_avg", type=int, default=7, help="FEDformer 趋势平滑窗口")
-    parser.add_argument("--fedformer_layers", type=int, default=2, help="FEDformer 编码器层数")
-    parser.add_argument("--fedformer_nhead", type=int, default=4, help="FEDformer 注意力头数")
+    parser.add_argument("--lstnet_conv_kernel", type=int, default=5, help="LSTNet ")
+    parser.add_argument("--lstnet_skip_window", type=int, default=6, help="LSTNet ")
+    parser.add_argument("--timesnet_blocks", type=int, default=3, help="TimesNet ")
+    parser.add_argument("--asthgcn_hyperedges", type=int, default=16, help="ASTHGCN ")
+    parser.add_argument("--st_transformer_layers", type=int, default=2, help="ST-Transformer ")
+    parser.add_argument("--st_transformer_nhead", type=int, default=4, help="ST-Transformer ")
+    parser.add_argument("--patch_len", type=int, default=6, help="PatchTST patch ")
+    parser.add_argument("--patch_stride", type=int, default=3, help="PatchTST patch ")
+    parser.add_argument("--patchtst_layers", type=int, default=2, help="PatchTST ")
+    parser.add_argument("--patchtst_nhead", type=int, default=4, help="PatchTST ")
+    parser.add_argument("--fedformer_top_k_freq", type=int, default=16, help="FEDformer ")
+    parser.add_argument("--fedformer_moving_avg", type=int, default=7, help="FEDformer ")
+    parser.add_argument("--fedformer_layers", type=int, default=2, help="FEDformer ")
+    parser.add_argument("--fedformer_nhead", type=int, default=4, help="FEDformer ")
 
-    parser.add_argument("--epochs", type=int, default=20, help="最大训练轮数")
-    parser.add_argument("--patience", type=int, default=4, help="早停耐心轮数")
-    parser.add_argument("--disable_early_stop", type=int, default=1, choices=[0, 1], help="是否关闭早停 1关闭 0开启")
+    parser.add_argument("--epochs", type=int, default=20, help="")
+    parser.add_argument("--patience", type=int, default=4, help="")
+    parser.add_argument("--disable_early_stop", type=int, default=1, choices=[0, 1], help=" 1 0")
     parser.add_argument(
         "--save_model_mode",
         type=str,
         default="last",
         choices=["best", "last"],
-        help="模型权重保存与最终评估方式 best为验证集最优 last为最后一轮",
+        help=" best last",
     )
-    parser.add_argument("--lr", type=float, default=2e-4, help="学习率")
-    parser.add_argument("--weight_decay", type=float, default=1e-5, help="权重衰减")
-    parser.add_argument("--seed", type=int, default=42, help="随机种子")
-    parser.add_argument("--device", type=str, default="cuda", choices=["auto", "cpu", "cuda"], help="训练设备")
-    parser.add_argument("--amp", type=int, default=1, choices=[0, 1], help="是否开启 CUDA 混合精度 1开启 0关闭")
+    parser.add_argument("--lr", type=float, default=2e-4, help="")
+    parser.add_argument("--weight_decay", type=float, default=1e-5, help="")
+    parser.add_argument("--seed", type=int, default=42, help="")
+    parser.add_argument("--device", type=str, default="cuda", choices=["auto", "cpu", "cuda"], help="")
+    parser.add_argument("--amp", type=int, default=1, choices=[0, 1], help=" CUDA  1 0")
 
-    parser.add_argument("--influx_loss_weight", type=float, default=0.05, help="主损失中水侵预测损失权重")
-    parser.add_argument("--influx_loss_high_alpha", type=float, default=1, help="水侵主损失高值加权系数")
-    parser.add_argument("--gas_low_weight_alpha", type=float, default=0, help="产气低值样本加权系数 自动按产气由小到大递减权重 0表示关闭")
-    parser.add_argument("--max_train_windows", type=int, default=1024, help="训练集最多采样窗口数 <=0 表示不限制")
-    parser.add_argument("--max_val_windows", type=int, default=256, help="验证集最多采样窗口数 <=0 表示不限制")
-    parser.add_argument("--max_test_windows", type=int, default=256, help="测试集最多采样窗口数 <=0 表示不限制")
+    parser.add_argument("--influx_loss_weight", type=float, default=0.05, help="")
+    parser.add_argument("--influx_loss_high_alpha", type=float, default=1, help="")
+    parser.add_argument("--gas_low_weight_alpha", type=float, default=0, help="  0")
+    parser.add_argument("--max_train_windows", type=int, default=1024, help=" <=0 ")
+    parser.add_argument("--max_val_windows", type=int, default=256, help=" <=0 ")
+    parser.add_argument("--max_test_windows", type=int, default=256, help=" <=0 ")
 
-    parser.add_argument("--output_dir", type=str, default="runs/no_phy_branch_v1", help="输出目录")
-    parser.add_argument("--save_name", type=str, default="best_model.pt", help="模型权重文件名")
+    parser.add_argument("--output_dir", type=str, default="runs/no_phy_branch_v1", help="")
+    parser.add_argument("--save_name", type=str, default="best_model.pt", help="")
     return parser
 
 
@@ -294,7 +294,7 @@ def train_one_epoch(
             pred_influx = torch.clamp(pred_influx, min=influx_norm_floor)
 
             gas_true_norm = torch.clamp(target[..., 0], min=gas_norm_floor)
-            # 自动低值加权 产气越小权重越大 仅调一个 alpha
+            #    alpha
             gas_weight = 1.0 + float(gas_low_weight_alpha) * torch.exp(-gas_true_norm)
             gas_loss = weighted_masked_mse(
                 pred_gas,
@@ -548,7 +548,7 @@ def save_test_plots(test_df: pd.DataFrame, output_dir: Path) -> None:
     try:
         import matplotlib.pyplot as plt
     except Exception:
-        print("未检测到 matplotlib 跳过测试集绘图保存")
+        print(" matplotlib ")
         return
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -596,7 +596,7 @@ def _safe_filename(text: str) -> str:
 
 
 def _save_dataframe_excel(df: pd.DataFrame, excel_path: Path) -> Path:
-    # 优先写 xlsx 若环境缺少引擎则回退到 csv
+    #  xlsx  csv
     for engine in (None, "xlsxwriter", "openpyxl"):
         try:
             if engine is None:
@@ -655,14 +655,7 @@ def save_holdout_plot(holdout_df: pd.DataFrame, output_dir: Path, holdout_well: 
 
 def _normalize_well_id_for_match(text: str) -> str:
     s = str(text).strip().upper()
-    s = (
-        s.replace("涩", "S")
-        .replace("澀", "S")
-        .replace("ɬ", "S")
-        .replace("É¬", "S")
-        .replace("ʦ", "S")
-        .replace("΢", "S")
-    )
+    s = s.replace("ɬ", "S").replace("É¬", "S").replace("ʦ", "S").replace("΢", "S")
     s = s.replace("－", "-").replace("—", "-").replace("_", "-")
     s = "".join(ch for ch in s if ch.isascii() and (ch.isalnum() or ch == "-"))
     s = re.sub(r"-+", "-", s).strip("-")
@@ -848,11 +841,11 @@ def main() -> None:
     device = resolve_device(args.device)
     use_amp = bool(args.amp) and device.type == "cuda"
     if bool(args.amp) and device.type != "cuda":
-        print("当前设备不是 CUDA 已自动关闭混合精度")
+        print(" CUDA ")
     scaler = build_grad_scaler(use_amp=use_amp)
 
-    # 关键节点 读取数据并构建时序知识图谱窗口
-    print(f"加载动态数据: {args.dynamic_path}")
+    #
+    print(f": {args.dynamic_path}")
     data_bundle = prepare_tkg_dataloaders(
         dynamic_path=args.dynamic_path,
         static_path=args.static_path,
@@ -899,27 +892,27 @@ def main() -> None:
         f"Static dim: {len(data_bundle.static_feature_cols)} | Device: {device} | AMP: {int(use_amp)}"
     )
     print(
-        f"Wells (原始/对齐后/筛选后): "
+        f"Wells (//): "
         f"{data_bundle.original_well_count}/{data_bundle.aligned_well_count}/{data_bundle.filtered_well_count} | "
         f"align_well_sets={int(data_bundle.align_well_sets)} | min_valid_days={data_bundle.min_valid_days}"
     )
     print(
         f"split_mode={data_bundle.split_mode} | influx_train_p90={data_bundle.influx_train_p90:.6f}"
     )
-    print(f"水侵结果文件: {data_bundle.influx_csv_path}")
+    print(f": {data_bundle.influx_csv_path}")
     if data_bundle.holdout_well is not None:
-        gas_ok = "有" if data_bundle.holdout_gas_count > 0 else "无"
-        influx_ok = "有" if data_bundle.holdout_influx_count > 0 else "无"
+        gas_ok = "" if data_bundle.holdout_gas_count > 0 else ""
+        influx_ok = "" if data_bundle.holdout_influx_count > 0 else ""
         print(
-            f"独立井数据检查 | 井号={data_bundle.holdout_well} | "
-            f"产气数据={gas_ok}({data_bundle.holdout_gas_count}) | "
-            f"水侵数据={influx_ok}({data_bundle.holdout_influx_count})"
+            f" | ={data_bundle.holdout_well} | "
+            f"={gas_ok}({data_bundle.holdout_gas_count}) | "
+            f"={influx_ok}({data_bundle.holdout_influx_count})"
         )
 
     static_x = data_bundle.static_x.to(device)
     neighbor_index = data_bundle.neighbor_index.to(device)
 
-    # 关键节点 按 model_name 构建模型 默认仍为原始时空模型
+    #   model_name
     model = build_model(
         model_name=args.model_name,
         dynamic_input_dim=len(data_bundle.dynamic_feature_cols),
@@ -954,7 +947,7 @@ def main() -> None:
     bad_epochs = 0
     history = []
 
-    # 关键节点 训练循环 + 动态 ETA
+    #   +  ETA
     for epoch in range(1, args.epochs + 1):
         tic = perf_counter()
         train_stats = train_one_epoch(
@@ -1017,7 +1010,7 @@ def main() -> None:
             f"finish: {eta_finish.strftime('%Y-%m-%d %H:%M:%S')}"
         )
 
-        # 关键节点 早停与最优权重保存
+        #
         if val_gas_rmse < best_val_gas_rmse:
             best_val_gas_rmse = val_gas_rmse
             best_val_gas_r2 = float(val_metrics["gas_r2"])
@@ -1037,7 +1030,7 @@ def main() -> None:
         else:
             bad_epochs += 1
             if int(args.disable_early_stop) == 0 and bad_epochs >= args.patience:
-                print(f"第 {epoch} 轮触发早停")
+                print(f" {epoch} ")
                 break
 
     if str(args.save_model_mode) == "last":
@@ -1065,9 +1058,9 @@ def main() -> None:
             best_val_influx_r2=float("nan"),
             best_epoch=0,
         )
-        print("未找到最优权重文件 已回退使用当前模型权重")
+        print(" ")
 
-    # 关键节点 按选择的权重在 train val test 三个切分上统一评估
+    #   train val test
     train_metrics_raw, _ = evaluate(
         model=model,
         loader=data_bundle.train_loader,
@@ -1119,9 +1112,9 @@ def main() -> None:
     print(
         f"Best epoch: {best_epoch}, best val gas R2: {best_val_gas_r2:.6f}, best val influx R2: {best_val_influx_r2:.6f}"
     )
-    print(f"训练集指标: {format_metrics(train_metrics)}")
-    print(f"验证集指标: {format_metrics(val_metrics)}")
-    print(f"测试集指标: {format_metrics(test_metrics)}")
+    print(f": {format_metrics(train_metrics)}")
+    print(f": {format_metrics(val_metrics)}")
+    print(f": {format_metrics(test_metrics)}")
 
     pd.DataFrame(history).to_csv(output_dir / "history.csv", index=False)
     test_df.to_csv(output_dir / "test_predictions.csv", index=False)
@@ -1131,7 +1124,7 @@ def main() -> None:
     holdout_metrics: Dict[str, float] = empty_holdout_metrics()
     holdout_saved_path: str | None = None
     if data_bundle.holdout_well is not None:
-        # 从测试集预测结果中提取独立井，不额外构建单井推理集
+        # ，
         holdout_df = predict_holdout_from_test_loader(
             model=model,
             data_bundle=data_bundle,
@@ -1175,8 +1168,8 @@ def main() -> None:
             saved_path = _save_dataframe_excel(holdout_df, holdout_excel_path)
             holdout_saved_path = str(saved_path)
             save_holdout_plot(holdout_df=holdout_df, output_dir=output_dir, holdout_well=data_bundle.holdout_well)
-            print(f"独立井预测文件: {saved_path.resolve()}")
-            print(f"独立井指标: {format_metrics(holdout_metrics)}")
+            print(f": {saved_path.resolve()}")
+            print(f": {format_metrics(holdout_metrics)}")
 
     save_json(train_metrics, output_dir / "train_metrics.json")
     save_json(val_metrics, output_dir / "val_metrics.json")
@@ -1234,9 +1227,9 @@ def main() -> None:
         },
         output_dir / "run_summary.json",
     )
-    print(f"结果文件已保存到: {output_dir.resolve()}")
+    print(f": {output_dir.resolve()}")
     total_seconds = perf_counter() - total_start
-    print(f"总用时: {total_seconds:.2f}s | {format_duration(total_seconds)}")
+    print(f": {total_seconds:.2f}s | {format_duration(total_seconds)}")
 
 
 if __name__ == "__main__":

@@ -74,7 +74,7 @@ class GlobalSpatialTransformer(nn.Module):
         return_attention: bool = False,
     ) -> torch.Tensor | tuple[torch.Tensor, dict[str, torch.Tensor]]:
         # x: [B, T, N, D]
-        # 关键节点 展平 B 和 T 让每个时间步独立做节点注意力
+        #   B  T
         batch_size, seq_len, n_nodes, d_model = x.shape
         h = x.reshape(batch_size * seq_len, n_nodes, d_model)
 

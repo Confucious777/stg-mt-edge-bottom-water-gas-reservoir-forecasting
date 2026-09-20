@@ -45,7 +45,7 @@ The default entry point is:
 python main.py
 ```
 
-The training scripts default to the anonymized release dataset under `data/public/processed/`. Run the STG-MT training entry point with:
+The training scripts default to the anonymized release dataset under `data/public/processed_en/`. Run the STG-MT training entry point with:
 
 ```bash
 python main.py

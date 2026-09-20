@@ -21,7 +21,7 @@ class WeightedGraphSAGELayer(nn.Module):
         edge_weight: torch.Tensor,
         node_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
-        # 关键节点 先按邻居索引收集邻居特征再做加权均值聚合
+        #
         batch_size, n_nodes, feat_dim = x.shape
         k = neighbor_index.shape[1]
 
@@ -78,7 +78,7 @@ class GraphSAGEGRU(nn.Module):
         if node_mask is None:
             node_mask = torch.ones(batch_size, seq_len, n_nodes, device=x.device, dtype=x.dtype)
 
-        # 关键节点 逐时间步做空间聚合
+        #
         z_steps = []
         for t in range(seq_len):
             z_t = self.sage(
@@ -90,7 +90,7 @@ class GraphSAGEGRU(nn.Module):
             z_steps.append(z_t)
         z = torch.stack(z_steps, dim=1)
 
-        # 关键节点 每口井沿时间维输入 GRU
+        #   GRU
         lengths = node_mask.sum(dim=1).long().clamp(min=1)
         z_bn = z.permute(0, 2, 1, 3).reshape(batch_size * n_nodes, seq_len, -1)
         len_bn = lengths.reshape(batch_size * n_nodes).cpu()

@@ -17,22 +17,46 @@ from pathlib import Path
 from typing import Iterable
 
 
-WELL = "井号"
-DATE = "日期"
-LAYER = "开发层组"
-Y = "纵坐标"
-X = "横坐标"
-GAS = "日产气量"
-WATER = "日产水量"
+WELL = "\u4e95\u53f7"
+DATE = "\u65e5\u671f"
+LAYER = "\u5f00\u53d1\u5c42\u7ec4"
+Y = "\u7eb5\u5750\u6807"
+X = "\u6a2a\u5750\u6807"
+GAS = "\u65e5\u4ea7\u6c14\u91cf"
+WATER = "\u65e5\u4ea7\u6c34\u91cf"
 INFLUX = "V(m3/d)"
-MEASURE = "措施类型"
+MEASURE = "\u63aa\u65bd\u7c7b\u578b"
 
 FILES = (
     "production_dynamic.csv",
     "build_TKG_data.csv",
     "single_well_info_with_coordinates.csv",
-    "水侵量计算结果.csv",
+    "\u6c34\u4fb5\u91cf\u8ba1\u7b97\u7ed3\u679c.csv",
 )
+
+HEADER_MAP = {
+    WELL: "well_id",
+    DATE: "date",
+    GAS: "gas_production",
+    WATER: "water_production",
+    INFLUX: "water_invasion_rate",
+    MEASURE: "measure_type",
+    LAYER: "layer_group",
+    Y: "y_coordinate",
+    X: "x_coordinate",
+    "\u5e73\u5747\u5c04\u5b54\u6df1\u5ea6": "mean_perforation_depth",
+    "\u5b54\u9699\u5ea6": "porosity",
+    "\u6e17\u900f\u7387": "permeability",
+    "\u542b\u6c34\u9971\u548c\u5ea6": "water_saturation",
+    "\u5e73\u5747\u6cb9\u538b": "avg_oil_pressure",
+    "\u5e73\u5747\u5957\u538b": "avg_casing_pressure",
+    "\u4e95\u53e3\u6e29\u5ea6": "wellhead_temperature",
+    "\u4e00\u7ea7\u8282\u6d41\u538b\u529b": "first_stage_choke_pressure",
+    "\u4e00\u7ea7\u8282\u6d41\u6e29\u5ea6": "first_stage_choke_temperature",
+    "\u5916\u8f93\u538b\u529b": "export_pressure",
+    "\u5916\u8f93\u6e29\u5ea6": "export_temperature",
+    "\u4e00\u7ea7\u8282\u6d41\u5de5\u4f5c\u5236\u5ea6": "first_stage_choke_mode",
+}
 
 
 def read_rows(path: Path) -> tuple[list[str], list[list[str]]]:
@@ -138,16 +162,17 @@ def transform_file(
                 values[indices[X]] = format_float(cos_theta * dx - sin_theta * dy + 120000.0)
                 values[indices[Y]] = format_float(sin_theta * dx + cos_theta * dy + 240000.0)
         if filename == "build_TKG_data.csv":
-            if "平均射孔深度" in indices:
-                values[indices["平均射孔深度"]] = affine(values[indices["平均射孔深度"]], 1.17, 83.0)
-            if "孔隙度" in indices:
-                values[indices["孔隙度"]] = affine(values[indices["孔隙度"]], 1.25, 0.015, positive_only=True)
-            if "渗透率" in indices:
-                values[indices["渗透率"]] = affine(values[indices["渗透率"]], 0.83, 0.4, positive_only=True)
-            if "含水饱和度" in indices:
-                values[indices["含水饱和度"]] = affine(values[indices["含水饱和度"]], 0.91, 0.02)
-        if filename == "single_well_info_with_coordinates.csv" and "平均射孔深度" in indices:
-            values[indices["平均射孔深度"]] = affine(values[indices["平均射孔深度"]], 1.17, 83.0)
+            for column, scale, offset, positive_only in (
+                ("\u5e73\u5747\u5c04\u5b54\u6df1\u5ea6", 1.17, 83.0, False),
+                ("\u5b54\u9699\u5ea6", 1.25, 0.015, True),
+                ("\u6e17\u900f\u7387", 0.83, 0.4, True),
+                ("\u542b\u6c34\u9971\u548c\u5ea6", 0.91, 0.02, False),
+            ):
+                if column in indices:
+                    values[indices[column]] = affine(values[indices[column]], scale, offset, positive_only)
+        if filename == "single_well_info_with_coordinates.csv" and "\u5e73\u5747\u5c04\u5b54\u6df1\u5ea6" in indices:
+            column = "\u5e73\u5747\u5c04\u5b54\u6df1\u5ea6"
+            values[indices[column]] = affine(values[indices[column]], 1.17, 83.0)
         if filename == "production_dynamic.csv":
             if WATER in indices:
                 values[indices[WATER]] = affine(values[indices[WATER]], 1.13, 0.08)
@@ -155,13 +180,13 @@ def transform_file(
                 label = values[indices[MEASURE]].strip()
                 values[indices[MEASURE]] = measure_map.get(label, "M00") if label else "M00"
             for column, scale, offset in (
-                ("平均油压", 1.07, 2.0),
-                ("平均套压", 0.93, 1.5),
-                ("井口温度", 1.05, 4.0),
-                ("一级节流压力", 1.08, 1.0),
-                ("一级节流温度", 0.96, 5.0),
-                ("外输压力", 1.06, 1.2),
-                ("外输温度", 1.04, 3.0),
+                ("\u5e73\u5747\u6cb9\u538b", 1.07, 2.0),
+                ("\u5e73\u5747\u5957\u538b", 0.93, 1.5),
+                ("\u4e95\u53e3\u6e29\u5ea6", 1.05, 4.0),
+                ("\u4e00\u7ea7\u8282\u6d41\u538b\u529b", 1.08, 1.0),
+                ("\u4e00\u7ea7\u8282\u6d41\u6e29\u5ea6", 0.96, 5.0),
+                ("\u5916\u8f93\u538b\u529b", 1.06, 1.2),
+                ("\u5916\u8f93\u6e29\u5ea6", 1.04, 3.0),
             ):
                 if column in indices:
                     values[indices[column]] = affine(values[indices[column]], scale, offset)
@@ -186,7 +211,12 @@ def main() -> None:
     center_x, center_y = coordinate_transform(loaded)
     for filename, (header, rows) in loaded.items():
         transformed = transform_file(filename, header, rows, well_map, layer_map, measure_map, center_x, center_y)
-        output_name = "production_dynamic.csv.gz" if filename == "production_dynamic.csv" else filename
+        if filename == "production_dynamic.csv":
+            output_name = "production_dynamic.csv.gz"
+        elif filename == "\u6c34\u4fb5\u91cf\u8ba1\u7b97\u7ed3\u679c.csv":
+            output_name = "water_invasion_result.csv"
+        else:
+            output_name = filename
         output_path = output_dir / output_name
         if filename == "production_dynamic.csv":
             handle_context = gzip.open(output_path, "wt", encoding="utf-8-sig", newline="")
@@ -194,7 +224,7 @@ def main() -> None:
             handle_context = output_path.open("w", encoding="utf-8-sig", newline="")
         with handle_context as handle:
             writer = csv.writer(handle, lineterminator="\n")
-            writer.writerow(header)
+            writer.writerow([HEADER_MAP.get(name, name) for name in header])
             writer.writerows(transformed)
     print(f"Wrote {len(FILES)} anonymized files and {len(well_map)} stable well aliases.")
 

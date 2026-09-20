@@ -14,7 +14,7 @@ class Upsample(nn.Module):
         self.long_term_scale_days = int(long_term_scale_days)
 
     def _build_scaled_index(self, mask: torch.Tensor) -> torch.Tensor:
-        # 将时间步按固定天数分桶 用于长期分支敏感性实验
+        #
         batch_size, t_day, _ = mask.shape
         valid_day = mask.sum(dim=2) > 0.5
         out = torch.full((batch_size, t_day), -1, dtype=torch.long, device=mask.device)
@@ -30,8 +30,8 @@ class Upsample(nn.Module):
         mask: torch.Tensor,
         month_index: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        # 输入 x=[B, T, N, F] mask=[B, T, N] month_index=[B, T]
-        # 关键节点 按真实月份聚合到月尺度
+        #  x=[B, T, N, F] mask=[B, T, N] month_index=[B, T]
+        #
         batch_size, t_day, n_nodes, feat_dim = x.shape
         if mask.shape != (batch_size, t_day, n_nodes):
             raise ValueError("mask shape must be [B, T, N]")
@@ -88,7 +88,7 @@ class Upsample(nn.Module):
 
     @staticmethod
     def repeat_to_daily(month_feat: torch.Tensor, day_to_month: torch.Tensor, t_day: int) -> torch.Tensor:
-        # 将月尺度特征按 day_to_month 映射回日尺度
+        #  day_to_month
         batch_size, _, n_nodes, feat_dim = month_feat.shape
         index = day_to_month[:, :t_day].long()
         safe_index = index.clamp(min=0)
@@ -143,8 +143,8 @@ class TransformerEncoder(nn.Module):
         self.norm = nn.LayerNorm(d_model)
 
     def forward(self, x: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
-        # 输入 x=[B, T, N, F] mask=[B, T, N]
-        # 关键节点 每口井沿时间独立编码
+        #  x=[B, T, N, F] mask=[B, T, N]
+        #
         bsz, t_len, n_nodes, _ = x.shape
         valid = mask > 0.5
 
@@ -172,7 +172,7 @@ class TransformerEncoder(nn.Module):
 
 
 class PhysicsGuidance(nn.Module):
-    # 物理引导模块 使用外部给定的水侵速度作为辅助特征
+    #
     def __init__(self, padding_value: float = -999.0) -> None:
         super().__init__()
         self.padding_value = float(padding_value)
@@ -341,7 +341,7 @@ class MultiScaleTemporalModule(nn.Module):
         influx_seq: torch.Tensor,
         influx_mask: torch.Tensor,
     ) -> Dict[str, torch.Tensor]:
-        # 关键节点 物理引导开关决定是否拼接水侵速度
+        #
         if self.use_physics_guidance:
             x_closeness = self.physics.fuse_features(
                 production_x=production_x,
@@ -355,10 +355,10 @@ class MultiScaleTemporalModule(nn.Module):
                 node_mask=node_mask,
             )
 
-        # 关键节点 日尺度时间分支始终保留
+        #
         h_c = self.closeness_encoder(x_closeness, mask=node_mask)
 
-        # 关键节点 关闭多尺度后 仅保留日尺度表示
+        #
         if self.use_multiscale_temporal and self.distant_encoder is not None:
             x_d, mask_d, day_to_month = self.upsample(
                 x_closeness,

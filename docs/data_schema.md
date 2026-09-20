@@ -4,18 +4,18 @@ The public repository does not contain field records or derived labels. The foll
 
 ## Dynamic production table
 
-The release file is `data/public/processed/production_dynamic.csv.gz`; the
+The release file is `data/public/processed_en/production_dynamic.csv.gz`; the
 loader reads it directly as a gzip-compressed CSV.
 
 The dynamic CSV must contain at least these columns:
 
 | Column | Meaning |
 | --- | --- |
-| `井号` | Well identifier |
-| `日期` | Observation date |
-| `日产气量` | Daily gas production |
-| `日产水量` | Daily water production, when available |
-| `V(m3/d)` | Water-invasion-rate label, when the TKG loader is used |
+| `well_id` | Well identifier |
+| `date` | Observation date |
+| `gas_production` | Daily gas production |
+| `water_production` | Daily water production, when available |
+| `water_invasion_rate` | Water-invasion-rate label, when the TKG loader is used |
 
 Additional numeric columns are treated as dynamic model features by the production loader. The TKG loader also recognizes measure-type fields and builds one-hot indicators when they are present.
 
@@ -25,13 +25,13 @@ The static table may contain the following well-level fields:
 
 | Column | Meaning |
 | --- | --- |
-| `井号` | Well identifier |
-| `开发层组` | Development layer group |
-| `横坐标`, `纵坐标` | Well coordinates |
-| `平均射孔深度` | Mean perforation depth |
-| `孔隙度` | Porosity |
-| `渗透率` | Permeability |
-| `含水饱和度` | Water saturation |
+| `well_id` | Well identifier |
+| `layer_group` | Development layer group |
+| `x_coordinate`, `y_coordinate` | Well coordinates |
+| `mean_perforation_depth` | Mean perforation depth |
+| `porosity` | Porosity |
+| `permeability` | Permeability |
+| `water_saturation` | Water saturation |
 
 The exact column names can be overridden in the training entry points where applicable. Static values are used for graph construction; dynamic production variables are used for sequence windows and edge-weight updates.
 

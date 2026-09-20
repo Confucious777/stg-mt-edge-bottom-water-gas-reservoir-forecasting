@@ -11,23 +11,23 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-WELL_COL = "\u4e95\u53f7"
-DATE_COL = "\u65e5\u671f"
-TARGET_COL = "\u65e5\u4ea7\u6c14\u91cf"
-WATER_COL = "\u65e5\u4ea7\u6c34\u91cf"
-INFLUX_COL = "V(m3/d)"
-MEASURE_TYPE_COL = "\u63aa\u65bd\u7c7b\u578b"
+WELL_COL = "well_id"
+DATE_COL = "date"
+TARGET_COL = "gas_production"
+WATER_COL = "water_production"
+INFLUX_COL = "water_invasion_rate"
+MEASURE_TYPE_COL = "measure_type"
 
-LAYER_COL = "\u5f00\u53d1\u5c42\u7ec4"
-Y_COL = "\u7eb5\u5750\u6807"
-X_COL = "\u6a2a\u5750\u6807"
-DEPTH_COL = "\u5e73\u5747\u5c04\u5b54\u6df1\u5ea6"
-PORO_COL = "\u5b54\u9699\u5ea6"
-PERM_COL = "\u6e17\u900f\u7387"
-WATER_SAT_COL = "\u542b\u6c34\u9971\u548c\u5ea6"
+LAYER_COL = "layer_group"
+Y_COL = "y_coordinate"
+X_COL = "x_coordinate"
+DEPTH_COL = "mean_perforation_depth"
+PORO_COL = "porosity"
+PERM_COL = "permeability"
+WATER_SAT_COL = "water_saturation"
 
 # These fields contain isolated recording outliers and are not used as model inputs.
-EXCLUDED_DYNAMIC_FEATURE_COLS = frozenset({"\u4e95\u53e3\u6e29\u5ea6", "\u5916\u8f93\u6e29\u5ea6"})
+EXCLUDED_DYNAMIC_FEATURE_COLS = frozenset({"wellhead_temperature", "export_temperature"})
 STATIC_ZERO_AS_MISSING_COLS = frozenset({PORO_COL, PERM_COL})
 
 
@@ -69,7 +69,7 @@ def _log_minmax_inverse_np(x_norm: np.ndarray, vmin: float, vmax: float) -> np.n
 
 
 def _append_measure_onehot_columns(df: pd.DataFrame, measure_type_col: str) -> Tuple[pd.DataFrame, List[str]]:
-    # 将措施类型做独热编码 缺失或空值位置保持全 0
+    #   0
     if measure_type_col not in df.columns:
         return df, []
 
@@ -137,7 +137,7 @@ def _build_stratified_window_split(
     val_ratio: float,
     seed: int,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    # 按“是否有水侵标签 + 标签强度分位”分层，再在层内随机切分窗口
+    # “ + ”，
     if all_indices.size == 0:
         empty = np.empty((0,), dtype=np.int64)
         return empty, empty, empty
@@ -174,7 +174,7 @@ def _build_stratified_window_split(
     val_idx = np.concatenate(val_parts) if val_parts else np.empty((0,), dtype=np.int64)
     test_idx = np.concatenate(test_parts) if test_parts else np.empty((0,), dtype=np.int64)
 
-    # 与时间索引一致排序，便于复现
+    # ，
     train_idx.sort()
     val_idx.sort()
     test_idx.sort()
@@ -187,7 +187,7 @@ def _collect_input_time_indices(
     horizon: int,
     n_time: int,
 ) -> np.ndarray:
-    # 收集训练窗口真实使用到的输入时间索引
+    #
     if target_indices.size == 0:
         return np.empty((0,), dtype=np.int64)
     parts: List[np.ndarray] = []
@@ -211,7 +211,7 @@ def _find_well_col(df: pd.DataFrame, preferred_col: str = WELL_COL) -> str | Non
     for col in df.columns:
         text = str(col)
         name = text.strip().lower()
-        if "井号" in text or "well" in name:
+        if "well" in name:
             return col
     return None
 
@@ -234,7 +234,7 @@ def _collect_static_well_set(
     fallback_static_path: str | Path | None,
     preferred_col: str,
 ) -> set[str]:
-    # 静态主表与兜底表并集，作为可建图井集合
+    # ，
     wells = _load_well_set_from_csv(static_path, preferred_col=preferred_col)
     if fallback_static_path is not None:
         wells |= _load_well_set_from_csv(fallback_static_path, preferred_col=preferred_col)
@@ -376,8 +376,8 @@ def _resolve_influx_csv_path(path: str | Path | None, dynamic_path: Path) -> Pat
                 return alt
         raise FileNotFoundError(f"Influx csv file not found: {p}")
 
-    candidates = [p for p in dynamic_path.parent.glob("*.csv") if "水侵" in p.name]
-    preferred = [p for p in candidates if "计算结果" in p.name]
+    candidates = [p for p in dynamic_path.parent.glob("*.csv") if "invasion" in p.name.lower()]
+    preferred = [p for p in candidates if "result" in p.name.lower()]
     if preferred:
         return sorted(preferred, key=lambda x: x.name)[0]
     if not candidates:
@@ -391,7 +391,7 @@ def _find_influx_date_col(df: pd.DataFrame, preferred_col: str | None) -> str | 
     for col in df.columns:
         text = str(col)
         name = text.strip().lower()
-        if "日期" in text or "时间" in text or "date" in name or "time" in name:
+        if "date" in name or "time" in name:
             return col
     return None
 
@@ -416,10 +416,9 @@ def _find_influx_well_col(df: pd.DataFrame, preferred_col: str = WELL_COL) -> st
 
 def _normalize_well_id(text: str) -> str:
     s = str(text).strip().upper()
-    # 统一井号前缀：S 与“涩”视为同一前缀，同时兼容常见乱码写法
+    # Normalize well-id prefixes for compatibility with legacy source data.
     s = (
-        s.replace("涩", "S")
-        .replace("澀", "S")
+        s
         .replace("ɬ", "S")
         .replace("É¬", "S")
         .replace("ʦ", "S")
@@ -473,7 +472,7 @@ def _load_influx_csv_matrix(
     influx_col: str,
     influx_date_col: str | None,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    # 将水侵速度 csv（长表）按“井号 + 日期”对齐到主时间轴
+    #  csv（）“ + ”
     n_time = len(dates)
     n_nodes = len(well_ids)
     influx_raw = np.full((n_time, n_nodes), np.nan, dtype=np.float32)
@@ -484,7 +483,7 @@ def _load_influx_csv_matrix(
     dates_day = pd.to_datetime(dates).values.astype("datetime64[D]")
     date_to_idx = {d: i for i, d in enumerate(dates_day)}
     well_to_idx = {str(w): i for i, w in enumerate(well_ids)}
-    # 为井号建立别名索引，处理不同编码/前缀写法
+    # ，/
     alias_to_idx: Dict[str, int] = {}
     for w, idx in well_to_idx.items():
         for key in _well_alias_keys(w):
@@ -765,53 +764,53 @@ def prepare_tkg_dataloaders(
     seed: int = 42,
 ) -> PreparedTKGData:
     """
-    构建时序知识图谱训练所需的张量与 DataLoader。
+     DataLoader。
 
-    参数:
-        dynamic_path: 动态生产 CSV 路径。
-        static_path: 静态井属性 CSV 路径。
-        fallback_static_path: 静态字段缺失时的兜底 CSV 路径。
-        influx_csv_path: 外部水侵速度 csv 文件路径。
-        influx_col: 水侵速度列名（例如 `V(m3/d)`）。
-        influx_date_col: 水侵表中的日期列名。
-        target_col: 动态表中的气量目标列名。
-        water_col: 用于动态边权更新的日产水量列名。
-        measure_type_col: 动态表中的措施类型列名 用于独热编码。
-        date_col: 动态表中的日期列名。
-        well_col: 动态表中的井号列名。
-        dynamic_feature_cols: 动态输入特征列表；为 None 时自动推断。
-        seq_len: 输入历史窗口长度。
-        horizon: 预测提前期。
-        train_ratio: 时间维训练集占比。
-        val_ratio: 时间维验证集占比。
-        batch_size: 批大小。
-        num_workers: DataLoader 进程数。
-        max_train_windows: 训练窗口最大采样数。
-        max_val_windows: 验证窗口最大采样数。
-        max_test_windows: 测试窗口最大采样数。
-        padding_value: 无效时间步填充值。
-        neighbor_k: 每个节点保留的邻居数。
-        alpha_dist: 静态邻接中距离项权重。
-        alpha_prop: 静态邻接中物性相似项权重。
-        alpha_layer: 静态邻接中层组一致项权重。
-        dynamic_beta_level: 动态边权的水量水平门控系数。
-        dynamic_beta_diff: 动态边权的水量差异门控系数。
-        dynamic_mean_override: 动态特征 Z-score 归一化均值覆盖值，长度需与 dynamic_feature_cols 一致。
-        dynamic_std_override: 动态特征 Z-score 归一化标准差覆盖值，长度需与 dynamic_feature_cols 一致。
-        gas_mean_override: 产气标签 log1p 后 Z-score 归一化均值覆盖值。
-        gas_std_override: 产气标签 log1p 后 Z-score 归一化标准差覆盖值。
-        influx_mean_override: 水侵标签 log1p 后 Z-score 归一化均值覆盖值。
-        influx_std_override: 水侵标签 log1p 后 Z-score 归一化标准差覆盖值。
-        water_mean_override: 动态边权中日产水量均值覆盖值。
-        water_std_override: 动态边权中日产水量标准差覆盖值。
-        holdout_well: 训练外独立井号 该井标签不参与 train/val 损失 在 test 中提取并绘图。
-        align_well_sets: 是否先按动态井与静态井交集对齐井号集合。
-        min_valid_days: 井筛选阈值（按日产气量有效天数），<=0 表示不筛选。
-        split_mode: 窗口切分模式，`time` 为时间顺序切分，`stratified_random` 为按水侵标签分层随机切分。
-        seed: 采样随机种子。
+    :
+        dynamic_path:  CSV 。
+        static_path:  CSV 。
+        fallback_static_path:  CSV 。
+        influx_csv_path:  csv 。
+        influx_col: （ `V(m3/d)`）。
+        influx_date_col: 。
+        target_col: 。
+        water_col: 。
+        measure_type_col:  。
+        date_col: 。
+        well_col: 。
+        dynamic_feature_cols: ； None 。
+        seq_len: 。
+        horizon: 。
+        train_ratio: 。
+        val_ratio: 。
+        batch_size: 。
+        num_workers: DataLoader 。
+        max_train_windows: 。
+        max_val_windows: 。
+        max_test_windows: 。
+        padding_value: 。
+        neighbor_k: 。
+        alpha_dist: 。
+        alpha_prop: 。
+        alpha_layer: 。
+        dynamic_beta_level: 。
+        dynamic_beta_diff: 。
+        dynamic_mean_override:  Z-score ， dynamic_feature_cols 。
+        dynamic_std_override:  Z-score ， dynamic_feature_cols 。
+        gas_mean_override:  log1p  Z-score 。
+        gas_std_override:  log1p  Z-score 。
+        influx_mean_override:  log1p  Z-score 。
+        influx_std_override:  log1p  Z-score 。
+        water_mean_override: 。
+        water_std_override: 。
+        holdout_well:   train/val   test 。
+        align_well_sets: 。
+        min_valid_days: （），<=0 。
+        split_mode: ，`time` ，`stratified_random` 。
+        seed: 。
 
-    返回:
-        包含训练/验证/测试加载器、标准化统计量、图结构与切分信息的 PreparedTKGData。
+    :
+        //、、 PreparedTKGData。
     """
     if seq_len < 1:
         raise ValueError("seq_len must be >= 1")
@@ -834,7 +833,7 @@ def prepare_tkg_dataloaders(
     dyn_df = dyn_df.dropna(subset=[well_col, date_col]).copy()
     original_well_count = int(dyn_df[well_col].nunique())
 
-    # 先按静态可用井集合对齐，保证时序与建图井号一致
+    # ，
     aligned_well_count = original_well_count
     if align_well_sets:
         static_wells = _collect_static_well_set(
@@ -848,7 +847,7 @@ def prepare_tkg_dataloaders(
         if aligned_well_count < 2:
             raise ValueError("After aligning dynamic and static wells, fewer than 2 wells remain.")
 
-    # 再按气量有效天数筛井，减少稀疏井噪声与显存占用
+    # ，
     filtered_well_count = aligned_well_count
     if min_valid_days > 0:
         target_valid = pd.to_numeric(dyn_df[target_col], errors="coerce").notna()
@@ -862,7 +861,7 @@ def prepare_tkg_dataloaders(
                 "Please lower this threshold."
             )
 
-    # 措施类型独热编码后并入动态特征
+    #
     dyn_df, measure_onehot_cols = _append_measure_onehot_columns(
         dyn_df,
         measure_type_col=measure_type_col,
@@ -961,11 +960,11 @@ def prepare_tkg_dataloaders(
     gas_mask = np.isfinite(gas_raw).astype(np.float32)
 
     dynamic_filled = np.empty_like(dynamic_raw)
-    # 先按时间方向前后填充，再用全局中位数兜底
+    # ，
     for fi in range(n_dyn):
         feature = dynamic_raw[:, :, fi]
         if dynamic_feature_cols[fi] in measure_onehot_set:
-            # 措施类型独热特征缺失时直接置 0
+            #  0
             dynamic_filled[:, :, fi] = np.where(np.isfinite(feature), feature, 0.0).astype(np.float32)
         else:
             feature_df = pd.DataFrame(feature)
@@ -976,7 +975,7 @@ def prepare_tkg_dataloaders(
             dynamic_filled[:, :, fi] = np.where(np.isfinite(filled), filled, fallback).astype(np.float32)
 
     influx_path = _resolve_influx_csv_path(influx_csv_path, dynamic_path=dynamic_path)
-    # 外部水侵速度对齐到主时间轴 缺失位置保留掩码 0
+    #   0
     influx_raw, influx_mask = _load_influx_csv_matrix(
         influx_csv_path=influx_path,
         dates=dates,
@@ -984,7 +983,7 @@ def prepare_tkg_dataloaders(
         influx_col=influx_col,
         influx_date_col=influx_date_col,
     )
-    # 水侵标签是稀疏人工计算结果 仅在有标签且节点动态有效时参与监督
+    #
     influx_effective_mask = ((influx_mask > 0.5) & (node_mask > 0.5)).astype(np.float32)
     influx_for_split = np.where(np.isfinite(influx_raw), influx_raw, 0.0).astype(np.float32)
 
@@ -1030,7 +1029,7 @@ def prepare_tkg_dataloaders(
     dynamic_std = np.ones((n_dyn,), dtype=np.float32)
     for fi in range(n_dyn):
         if dynamic_feature_cols[fi] in measure_onehot_set:
-            # 独热特征保持 0/1 不做标准化
+            #  0/1
             dynamic_mean[fi] = 0.0
             dynamic_std[fi] = 1.0
             continue
@@ -1064,7 +1063,7 @@ def prepare_tkg_dataloaders(
             vmin=float(dynamic_mean[fi]),
             vmax=float(dynamic_std[fi]),
         )
-    # 无效节点时间步统一使用 padding_value
+    #  padding_value
     dynamic_norm = np.where(node_mask[:, :, None] > 0.5, dynamic_norm, padding_value).astype(np.float32)
 
     gas_filled = np.where(np.isfinite(gas_raw), gas_raw, np.nanmedian(gas_raw)).astype(np.float32)
@@ -1082,7 +1081,7 @@ def prepare_tkg_dataloaders(
         gas_mean = float(gas_mean_override)
     if gas_std_override is not None:
         gas_std = float(gas_std_override)
-    # 目标采用 log1p 后做 Z-score 归一化 兼顾长尾分布与数值稳定
+    #  log1p  Z-score
     gas_log = np.log1p(np.clip(gas_filled, 0.0, None))
     gas_target_y = _log_minmax_forward_np(gas_log, vmin=gas_mean, vmax=gas_std).astype(np.float32)
     gas_target_y = np.where(gas_mask > 0.5, gas_target_y, 0.0).astype(np.float32)
@@ -1105,7 +1104,7 @@ def prepare_tkg_dataloaders(
         influx_mean = float(influx_mean_override)
     if influx_std_override is not None:
         influx_std = float(influx_std_override)
-    # 水侵标签与产气一致 使用 log1p + Z-score
+    #   log1p + Z-score
     influx_filled = np.where(np.isfinite(influx_raw), influx_raw, influx_fill_raw).astype(np.float32)
     influx_log = np.log1p(np.clip(influx_filled, 0.0, None))
     influx_norm = _log_minmax_forward_np(influx_log, vmin=influx_mean, vmax=influx_std).astype(np.float32)
@@ -1184,14 +1183,14 @@ def prepare_tkg_dataloaders(
     )
 
     if holdout_well_resolved is not None and holdout_well_index is not None:
-        # 将独立井仅放在测试阶段监督中，避免其标签泄漏到训练和验证
+        # ，
         tkg_data.gas_target_mask[train_target_indices, holdout_well_index] = 0.0
         tkg_data.gas_target_mask[val_target_indices, holdout_well_index] = 0.0
         tkg_data.influx_target_mask[train_target_indices, holdout_well_index] = 0.0
         tkg_data.influx_target_mask[val_target_indices, holdout_well_index] = 0.0
 
     pin_memory = torch.cuda.is_available()
-    # 三个切分分别构建窗口数据集
+    #
     train_dataset = TKGWindowDataset(
         tkg_data=tkg_data,
         target_indices=train_target_indices,
